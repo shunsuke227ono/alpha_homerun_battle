@@ -16,8 +16,8 @@ final color BAT_COLOR = color(204,102,0);
 final int size_x=960;
 //final int size_y=556;
 final int size_y=700;
-final int ball_sy=415;
-final int pit_Dis=150;
+final float ball_sy=425;
+final float pit_Dis=140;
 final int ball_max=10;
 int ball_n;
 Ball ball = new Ball(ball_sy,pit_Dis);
@@ -107,7 +107,7 @@ void loopMenu() {
 }
 
 void loopGame() {
-  time+=1;
+  time++;
   float alpha=alphaCalc();
   bat.preSet(btg,alpha);
   if(ball_n>=ball_max){
@@ -173,6 +173,8 @@ void loopGame() {
 }
 
 void loadResult() {
+  fill(TX_COLOR);
+  textSize(100);
   text("finish",size_x*0.5,size_y*0.4);
   text(bat.homerun_n + " HOMERUN",size_x*0.5,size_y*0.6);
   text("POINTS: " + bat.getPoint,size_x*0.5,size_y*0.8);
@@ -205,7 +207,7 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],size_x*0.5-8,ball_sy,64,88);
+  image(pitcher[i],size_x*0.5-8,ball_sy-10,64,88);
 }
 
 void bgSet(){
@@ -224,10 +226,10 @@ class Batter{
   PImage btg;
   float alpha;
   final int LENGTH=100;
-  int ball_sy;
-  int pit_Dis;
+  float ball_sy;
+  float pit_Dis;
 
-  Batter(int le, int dis){
+  Batter(float le, float dis){
     ball_sy=le;
     pit_Dis=dis;
   }
@@ -242,12 +244,23 @@ class Batter{
     fill(BAT_COLOR);
     translate(x,y);
     rotate(7*PI/6);
-    image(btg,0,0,l,w*0.1);//w*alpha
+    float wid;
+    if(alpha==0){
+      wid=w*0.1;
+    }else{
+      if(alpha<0.03){
+        alpha=0.03;
+      }
+      wid=w*alpha;
+    }
+    image(btg,0,0,l,wid);
     resetMatrix();
   }
 
   void swing(){
-    t+=1;
+    if(t<=8){
+      t++;
+    }
     fill(BAT_COLOR);
     translate(x,y);
     if(t==1){
@@ -266,7 +279,16 @@ class Batter{
       rotate(13*PI/12);
       l=LENGTH;
     }
-    image(btg,0,0,l,w*0.1);//w*alpha
+    float wid;
+    if(alpha==0){
+      wid=w*0.1;
+    }else{
+      if(alpha<0.03){
+        alpha=0.03;
+      }
+      wid=w*alpha;
+    }
+    image(btg,0,0,l,wid);
     resetMatrix();
   }
 
@@ -278,28 +300,32 @@ class Batter{
 }
 
 class Ball{
-  int x;
-  int y;
+  float x;
+  float y;
   float s;
-  int v;
+  float ss;
+  float v;
+  float vv;
   int dir;
   int dis;
   boolean hit;
   boolean homerun;
   boolean single;
-  int ball_sy;
-  int pit_Dis;
+  float ball_sy;
+  float pit_Dis;
 
-  Ball(int le, int dis){
+  Ball(float le, float dis){
     ball_sy=le;
     pit_Dis=dis;
   }
 
   void ballSet(){
     x=(size_x)/2;
-    y=size_y-400;
-    s=5;
-    v=1;
+    y=ball_sy;
+    s=2;
+    ss=0.1;
+    v=0;
+    vv=0;
     dir=-3;
     hit=false;
     homerun=false;
@@ -308,8 +334,10 @@ class Ball{
 
   void ballThrow(){
     y+=v;
-    v+=1;
-    s+=0.7;
+    v+=vv;
+    vv+=pit_Dis*6/(24*25*26);
+    s+=ss;
+    ss+=0.05;
     fill(BALL_COLOR);
     ellipse(x,y,s,s);
   }
@@ -318,8 +346,16 @@ class Ball{
     int t=bat.t;
     if(90<=time+t&&time+t<=91&&2<=t&&t<=6){
       hit=true;
-        dis = int(100*random(0.5,1.5));
-//      dis = int(60+alpha*300);
+      float alp;
+      if(alpha==0){
+        alp=0.1;
+      }else{
+        if(alpha<0.03){
+          alpha=0.03;
+        }
+        alp=alpha;
+      }
+      dis = int((50+alpha*500)*random(0.5,1.5));
       if(t==6){
         dir=-2;
         v=28;
@@ -362,18 +398,18 @@ class Ball{
 
   void ballFly() {
     if(dir==-2){
-      x-=13;
+      x-=15;
     }else if(dir==-1){
-      x-=5;
+      x-=8;
     }else if(dir==1){
-      x+=5;
+      x+=8;
     }else if(dir==2){
-      x+=13;
+      x+=15;
     }
     y-=v;
     v-=1;
     if(s>0){
-      s-=0.45;
+      s-=0.4;
     }
     fill(BALL_COLOR);
     ellipse(x,y,s,s);
