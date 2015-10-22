@@ -21,37 +21,85 @@ PImage btg;
 PImage[] pitcher;
 Batter bat = new Batter();
 int time;
+int difficulty; // 0: easy, 1: difficult
+
+Configuration configuration;
 
 void setup(){
   size(size_x,size_y);
-  ball_n=0;
-  bat.homerun_n=0;
-  bat.getPoint=0;
-  time=-180;
-  ball.ballSet();
-  background(BG_COLOR);
   smooth();
+  fill(255,255,255);
+  textSize(50);
   btg = loadImage("bat.jpg");
+  configuration = new Configuration();
   pitcher = new PImage[11];
+  reset();
   for(int i=1;i<=pitcher.length;i++){
     pitcher[i-1]=loadImage("sawa"+i+".jpg");
   }
 }
 
+void reset() {
+  background(BG_COLOR);
+  ball_n=0;
+  bat.homerun_n=0;
+  bat.getPoint=0;
+  time=-180;
+  ball.ballSet();
+  difficulty = 0;
+}
+
 void draw(){
+  switch(configuration.getScreen()) {
+    case Configuration.MENU:
+      loopMenu();
+      break;
+    case Configuration.GAME:
+      loopGame();
+      break;
+    case Configuration.RESULT:
+      loadResult();
+      break;
+  }
+}
+
+void keyPressed() {
+  switch(configuration.getScreen()) {
+    case Configuration.MENU:
+      if (keyCode == DOWN) {
+        difficulty = (difficulty+1) % 2;
+      }
+      if (keyCode == UP) {
+        // FIXME: とりま二段階なのでぷらす
+        difficulty = (difficulty+1) % 2;
+      }
+      break;
+  }
+}
+
+void loopMenu() {
+  background(BG_COLOR);
+  text("CHOOSE DIFFICULTY",10,50);
+  text("AND PRESS SPACE KEY TO START",10,100);
+  if(difficulty == 0) {
+    text(">EASY<",10,400);
+    text("DIFFICULT",10,500);
+  }
+  if(difficulty == 1) {
+    text("EASY",10,400);
+    text(">DIFFICULT<",10,500);
+  }
+  if(key == ' ') {
+    configuration.setScreen(Configuration.GAME);
+  }
+}
+
+void loopGame() {
   time+=1;
   float alpha=alphaCalc();
   bat.preSet(btg,alpha);
   if(ball_n>=ball_max){
-    fill(255,255,255);
-    textSize(50);
-    text("finish",size_x*0.43,size_y*0.4);
-    text(bat.homerun_n + " HOMERUN",size_x*0.35,size_y*0.6);
-    text("POINTS: " + bat.getPoint,size_x*0.35,size_y*0.8);
-    if(mousePressed){
-      setup();
-    }
-    return;
+    configuration.setScreen(Configuration.RESULT);
   }else if(time>=180){
     time=0;
     ball_n+=1;
@@ -99,6 +147,17 @@ void draw(){
   }
 }
 
+void loadResult() {
+  text("finish",size_x*0.43,size_y*0.4);
+  text(bat.homerun_n + " HOMERUN",size_x*0.35,size_y*0.6);
+  text("POINTS: " + bat.getPoint,size_x*0.35,size_y*0.8);
+  if(mousePressed){
+    mousePressed = false;
+    reset();
+    configuration.setScreen(Configuration.MENU);
+  }
+}
+
 void oscEvent(OscMessage msg){
   float data;
   if(msg.checkAddrPattern("/muse/elements/alpha_relative")){
@@ -132,7 +191,7 @@ class Batter{
   int getPoint;
   PImage btg;
   float alpha;
-  
+
   void batSet(){
     l=150;
     w=200;
@@ -146,7 +205,7 @@ class Batter{
     image(btg,0,0,l,w*0.1);//w*alpha
     resetMatrix();
   }
-  
+
   void swing(){
     t+=1;
     fill(BAT_COLOR);
@@ -170,7 +229,7 @@ class Batter{
     image(btg,0,0,l,w*0.1);//w*alpha
     resetMatrix();
   }
-  
+
   void preSet(PImage btgg, float alphaa){
     btg=btgg;
     alpha=alphaa;
@@ -197,7 +256,7 @@ class Ball{
     hit=false;
     homerun=false;
   }
-  
+
   void ballThrow(){
     y+=v;
     v+=1;
@@ -205,7 +264,7 @@ class Ball{
     fill(BALL_COLOR);
     ellipse(x,y,s,s);
   }
-  
+
   void hitted(int time, Batter bat,float alpha){
     int t=bat.t;
     if(90<=time+t&&time+t<=91&&2<=t&&t<=6){
@@ -249,7 +308,7 @@ class Ball{
       }
     }
   }
-  
+
   void ballFly() {
     if(dir==-2){
       x-=13;
@@ -267,5 +326,22 @@ class Ball{
     }
     fill(BALL_COLOR);
     ellipse(x,y,s,s);
+  }
+}
+
+
+class Configuration {
+  private int screen;
+  public static final int MENU = 0;
+  public static final int GAME = 1;
+  public static final int RESULT = 2;
+  public Configuration() {
+    screen = MENU;
+  }
+  public int getScreen() {
+    return screen;
+  }
+  public void setScreen(int screen) {
+    this.screen = screen;
   }
 }
