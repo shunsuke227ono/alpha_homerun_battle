@@ -8,24 +8,31 @@ int pointer = 0;
 final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
 
-final color BG_COLOR = color(0, 0, 0);
-final color BALL_COLOR = color(255, 255, 255);
+final color BG_COLOR = color(0,0,0);
+final color TX_COLOR = color(255,255,0);
+final color BALL_COLOR = color(255,255,255);
 final color BAT_COLOR = color(204,102,0);
 
-final int size_x=1000;
-final int size_y=600;
+final int size_x=960;
+//final int size_y=556;
+final int size_y=700;
+final int ball_sy=415;
+final int pit_Dis=150;
 final int ball_max=10;
 int ball_n;
-Ball ball = new Ball();
+Ball ball = new Ball(ball_sy,pit_Dis);
 PImage btg;
 PImage[] pitcher;
-Batter bat = new Batter();
+PImage ground;
+Batter bat = new Batter(ball_sy,pit_Dis);
 int time;
 int difficulty; // 0: easy, 1: difficult
 
 Configuration configuration;
 
 void setup(){
+  fill(TX_COLOR);
+  textAlign(CENTER);
   size(size_x,size_y);
   smooth();
   fill(255,255,255);
@@ -46,7 +53,8 @@ void reset() {
   bat.getPoint=0;
   time=-180;
   ball.ballSet();
-  difficulty = 0;
+  ground = loadImage("jingu.jpg");
+  bgSet();
 }
 
 void draw(){
@@ -75,19 +83,23 @@ void keyPressed() {
       }
       break;
   }
+  if (mousePressed) {
+    background(BG_COLOR);
+    configuration.setScreen(Configuration.RESULT);
+  }
 }
 
 void loopMenu() {
   background(BG_COLOR);
-  text("CHOOSE DIFFICULTY",10,50);
-  text("AND PRESS SPACE KEY TO START",10,100);
+  text("CHOOSE DIFFICULTY", size_x*0.5, 50);
+  text("AND PRESS SPACE KEY TO START", size_x*0.5, 100);
   if(difficulty == 0) {
-    text(">EASY<",10,400);
-    text("DIFFICULT",10,500);
+    text(">EASY<", size_x*0.5, 400);
+    text("DIFFICULT",size_x*0.5, 500);
   }
   if(difficulty == 1) {
-    text("EASY",10,400);
-    text(">DIFFICULT<",10,500);
+    text("EASY",size_x*0.5,400);
+    text(">DIFFICULT<",size_x*0.5,500);
   }
   if(key == ' ') {
     configuration.setScreen(Configuration.GAME);
@@ -106,20 +118,20 @@ void loopGame() {
     ball.ballSet();
   }
   if(time<=60){
-    background(BG_COLOR);
+  bgSet();
     if(time<0){
-      image(pitcher[0],490,160,80,110);
-      fill(255,255,255);
+      fill(TX_COLOR);
+      textAlign(CENTER,BOTTOM);
       textSize(100);
-      text(int(time*(-1)/60+1),450,350);
+      text(int(time*(-1)/60+1),size_x*0.5,size_y*0.5);
     }else if(time>=0){
-      image(pitcher[time/6],490,160,80,110);
+      pitSet(time/6);
+      bat.batSet();
     }
-    bat.batSet();
   }
   if(time>=61&&!ball.hit){
-    background(BG_COLOR);
-    image(pitcher[10],490,160,80,110);
+    bgSet();
+    pitSet(10);
     ball.ballThrow();
     if(bat.swing){
       ball.hitted(time,bat,alpha);
@@ -131,30 +143,43 @@ void loopGame() {
       bat.swing=true;
       bat.swing();
     }
+    if(ball.y>=size_y+100){
+      fill(TX_COLOR);
+      textAlign(CENTER);
+      textSize(100);
+      text("STRIKE",size_x*0.5,size_y*0.4);
+    }
   }
   if(ball.hit){
-    background(BG_COLOR);
-    image(pitcher[10],490,160,80,110);
+    bgSet();
+    pitSet(10);
     ball.ballFly();
-    if(ball.homerun&&ball.s<=5){
-      fill(255,255,255);
+    if(ball.s<=5){
+      fill(TX_COLOR);
+      textAlign(CENTER);
       textSize(100);
-      text("HOMERUN",size_x*0.25,size_y*0.4);
-      textSize(50);
-      text("distance:"+ball.dis,size_x*0.3,size_y*0.6);
+      if(ball.homerun){
+        text("HOME-RUN!!",size_x*0.5,size_y*0.4);
+        textSize(50);
+        text("distance:"+ball.dis,size_x*0.5,size_y*0.6);
+      }else if(ball.single){
+        text("HIT!",size_x*0.5,size_y*0.4);
+      }else{
+        text("FOUL",size_x*0.5,size_y*0.4);
       }
+    }
     bat.swing();
   }
 }
 
 void loadResult() {
-  text("finish",size_x*0.43,size_y*0.4);
-  text(bat.homerun_n + " HOMERUN",size_x*0.35,size_y*0.6);
-  text("POINTS: " + bat.getPoint,size_x*0.35,size_y*0.8);
+  text("finish",size_x*0.5,size_y*0.4);
+  text(bat.homerun_n + " HOMERUN",size_x*0.5,size_y*0.6);
+  text("POINTS: " + bat.getPoint,size_x*0.5,size_y*0.8);
   if(mousePressed){
-    mousePressed = false;
     reset();
     configuration.setScreen(Configuration.MENU);
+    mousePressed = false;
   }
 }
 
@@ -179,24 +204,39 @@ float alphaCalc(){
   return alphaSum/(N_CHANNELS*BUFFER_SIZE);
 }
 
+void pitSet(int i){
+  image(pitcher[i],size_x*0.5-8,ball_sy,64,88);
+}
+
+void bgSet(){
+  image(ground,0,0,size_x,size_y);
+}
 
 class Batter{
-  int l;
-  int w;
-  int x;
-  int y;
+  float l;
+  float w;
+  float x;
+  float y;
   int t;
   boolean swing;
   int homerun_n;
   int getPoint;
   PImage btg;
   float alpha;
+  final int LENGTH=100;
+  int ball_sy;
+  int pit_Dis;
+
+  Batter(int le, int dis){
+    ball_sy=le;
+    pit_Dis=dis;
+  }
 
   void batSet(){
-    l=150;
-    w=200;
+    l=LENGTH;
+    w=100;
     x=(size_x-l)/2;
-    y=size_y-50;
+    y=ball_sy+pit_Dis;
     t=0;
     swing=false;
     fill(BAT_COLOR);
@@ -212,19 +252,19 @@ class Batter{
     translate(x,y);
     if(t==1){
       rotate(7*PI/6);
-      l=60;
+      l=LENGTH*0.4;
     }else if(t<=6){
       rotate((4-t)*PI/12);
-      l=150-(4-t)^2*15;
+      l=LENGTH-(4-t)^2*LENGTH/6;
     }else if(t==7){
       rotate(5*PI/3);
-      l=70;
+      l=LENGTH*0.4;
     }else if(t==8){
       rotate(4*PI/3);
-      l=100;
+      l=LENGTH*0.7;
     }else{
       rotate(13*PI/12);
-      l=130;
+      l=LENGTH;
     }
     image(btg,0,0,l,w*0.1);//w*alpha
     resetMatrix();
@@ -246,6 +286,14 @@ class Ball{
   int dis;
   boolean hit;
   boolean homerun;
+  boolean single;
+  int ball_sy;
+  int pit_Dis;
+
+  Ball(int le, int dis){
+    ball_sy=le;
+    pit_Dis=dis;
+  }
 
   void ballSet(){
     x=(size_x)/2;
@@ -255,6 +303,7 @@ class Ball{
     dir=-3;
     hit=false;
     homerun=false;
+    single=false;
   }
 
   void ballThrow(){
@@ -294,6 +343,7 @@ class Ball{
             homerun=true;
             bat.getPoint+=dis*2;
           }else{
+            single=true;
             bat.getPoint+=dis*0.2;
           }
         }else{
@@ -303,6 +353,7 @@ class Ball{
             bat.getPoint+=dis;
           }else{
             bat.getPoint+=dis*0.1;
+            single=true;
           }
         }
       }
