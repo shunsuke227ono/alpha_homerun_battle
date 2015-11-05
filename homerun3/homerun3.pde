@@ -103,34 +103,38 @@ void keyPressed() {
 void loopMenu() {
   background(BG_COLOR);
   textSize(50);
-  fill(255,255,255);
-  text("CHOOSE DIFFICULTY", size_x*0.5, 50);
-  text("AND PRESS SPACE KEY TO START", size_x*0.5, 100);
+  bgSet();
+  fill(TX_COLOR);
+  text("Alpha Homerun Battle", size_x*0.5, 80);
+  textSize(30);
+  text("Choose difficulty", size_x*0.5, 200);
+  text("and press space key to start!", size_x*0.5, 230);
+  textSize(40);
   if(difficulty == 0) {
-    text(">EASY<",size_x*0.5,250);
-    text("NORMAL",size_x*0.5,350);
-    text("HARD",size_x*0.5,450);
-    text("α-INDUCTION",size_x*0.5,550);
+    text(">EASY<",size_x*0.5,350);
+    text("NORMAL",size_x*0.5,420);
+    text("HARD",size_x*0.5,490);
+    text("α-INDUCTION",size_x*0.5,560);
   }else if(difficulty == 1) {
-    text("EASY", size_x*0.5,250);
-    text(">NORMAL<",size_x*0.5,350);
-    text("HARD",size_x*0.5,450);
-    text("α-INDUCTION",size_x*0.5,550);
+    text("EASY",size_x*0.5,350);
+    text(">NORMAL<",size_x*0.5,420);
+    text("HARD",size_x*0.5,490);
+    text("α-INDUCTION",size_x*0.5,560);
   }else if(difficulty == 2) {
-    text("EASY", size_x*0.5,250);
-    text("NORMAL",size_x*0.5,350);
-    text(">HARD<",size_x*0.5,450);
-    text("α-INDUCTION",size_x*0.5,550);
+    text("EASY",size_x*0.5,350);
+    text("NORMAL",size_x*0.5,420);
+    text(">HARD<",size_x*0.5,490);
+    text("α-INDUCTION",size_x*0.5,560);
   }else if(difficulty == 3) {
-    text("EASY", size_x*0.5,250);
-    text("NORMAL",size_x*0.5,350);
-    text("HARD",size_x*0.5,450);
-    text(">α-INDUCTION<",size_x*0.5,550);
+    text("EASY",size_x*0.5,350);
+    text("NORMAL",size_x*0.5,420);
+    text("HARD",size_x*0.5,490);
+    text(">α-INDUCTION<",size_x*0.5,560);
   }else if(difficulty == 4) {
-    text("EASY", size_x*0.5,250);
-    text("NORMAL",size_x*0.5,350);
-    text("HARD",size_x*0.5,450);
-    text("α-INDUCTION",size_x*0.5,550);
+    text("EASY",size_x*0.5,350);
+    text("NORMAL",size_x*0.5,420);
+    text("HARD",size_x*0.5,490);
+    text("α-INDUCTION",size_x*0.5,560);
     text(">EXTREME<",size_x*0.5,650);
   }
 
@@ -287,7 +291,7 @@ class Batter{
     t=0;
     swing=false;
   }
-  
+
   void batPreSet(PImage btgg, float alphaa){
     btg=btgg;
     alpha=alphaa;
@@ -308,7 +312,7 @@ class Batter{
     }
     image(btg,0,0,l,wid);
     resetMatrix();
-  }    
+  }
 
   void swing(){
     if(t<=8){
@@ -394,7 +398,7 @@ class Ball{
       x3=change*2*(1+0.2*frame)/((frame-1)*frame);
     }
   }
-  
+
   void ballReset(){
     x=(size_x)/2;
     x2=0;
