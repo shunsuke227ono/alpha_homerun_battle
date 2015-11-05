@@ -331,7 +331,7 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],size_x*0.2+50,ball_sy-280,500,750);
+  image(pitcher[i],size_x*0.02-10,ball_sy-280,1000,750);
 }
 
 void bgSet(){
