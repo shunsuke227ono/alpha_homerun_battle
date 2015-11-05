@@ -45,12 +45,12 @@ void setup(){
   smooth();
   fill(255,255,255);
   textSize(50);
-  btg = loadImage("bat.jpg");
+  btg = loadImage("bat.png");
   configuration = new Configuration();
   pitcher = new PImage[11];
   reset();
   for(int i=1;i<=pitcher.length;i++){
-    pitcher[i-1]=loadImage("sawa"+i+".jpg");
+    pitcher[i-1]=loadImage("pitcher"+i+".png");
   }
 }
 
@@ -331,7 +331,7 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],size_x*0.5-8,ball_sy-10,64,88);
+  image(pitcher[i],size_x*0.2+50,ball_sy-280,500,750);
 }
 
 void bgSet(){
