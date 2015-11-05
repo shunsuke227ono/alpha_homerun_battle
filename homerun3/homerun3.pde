@@ -18,7 +18,7 @@ final int size_y=700;
 final float ball_sy=425;
 final float pit_Dis=140;
 final int ball_max=10;
-final int[] speed={100,150,0,-1};
+final int[] speed={100,150,0,130,-1};
 int ball_n;
 Ball ball = new Ball(ball_sy,pit_Dis);
 PImage btg;
@@ -26,7 +26,7 @@ PImage[] pitcher;
 PImage ground;
 Batter bat = new Batter(ball_sy,pit_Dis);
 int time;
-int difficulty; // 0:easy, 1:normal, 2:hard, 3:extreme
+int difficulty; // 0:easy, 1:normal, 2:hard, 3:extreme, 4:α波誘導モード
 
 Configuration configuration;
 
@@ -77,14 +77,17 @@ void keyPressed() {
   switch(configuration.getScreen()) {
     case Configuration.MENU:
       if (keyCode == DOWN) {
-        difficulty = (difficulty+1) % 3;
+        if(difficulty==4){
+          difficulty=-1;
+        }
+        difficulty = (difficulty+1) % 4;
       }
       if (keyCode == UP) {
         // FIXME: とりま二段階なのでぷらす
-        difficulty = (difficulty+2) % 3;
+        difficulty = (difficulty+3) % 4;
       }
       if(key=='z'){
-        difficulty=3;
+        difficulty=4;
       }
       break;
     case Configuration.GAME:
@@ -95,10 +98,6 @@ void keyPressed() {
         bat.x-=10;
       }
   }
-//  if (mousePressed) {
-//    background(BG_COLOR);
-//    configuration.setScreen(Configuration.RESULT);
-//  }
 }
 
 void loopMenu() {
@@ -108,22 +107,31 @@ void loopMenu() {
   text("CHOOSE DIFFICULTY", size_x*0.5, 50);
   text("AND PRESS SPACE KEY TO START", size_x*0.5, 100);
   if(difficulty == 0) {
-    text(">EASY<",size_x*0.5,300);
-    text("NORMAL",size_x*0.5,400);
-    text("HARD",size_x*0.5,500);
+    text(">EASY<",size_x*0.5,250);
+    text("NORMAL",size_x*0.5,350);
+    text("HARD",size_x*0.5,450);
+    text("α-INDUCTION",size_x*0.5,550);
   }else if(difficulty == 1) {
-    text("EASY", size_x*0.5,300);
-    text(">NORMAL<",size_x*0.5,400);
-    text("HARD",size_x*0.5,500);
+    text("EASY", size_x*0.5,250);
+    text(">NORMAL<",size_x*0.5,350);
+    text("HARD",size_x*0.5,450);
+    text("α-INDUCTION",size_x*0.5,550);
   }else if(difficulty == 2) {
-    text("EASY", size_x*0.5,300);
-    text("NORMAL",size_x*0.5,400);
-    text(">HARD<",size_x*0.5,500);
+    text("EASY", size_x*0.5,250);
+    text("NORMAL",size_x*0.5,350);
+    text(">HARD<",size_x*0.5,450);
+    text("α-INDUCTION",size_x*0.5,550);
   }else if(difficulty == 3) {
-    text("EASY", size_x*0.5,300);
-    text("NORMAL",size_x*0.5,400);
-    text("HARD",size_x*0.5,500);
-    text(">EXTREME<",size_x*0.5,600);
+    text("EASY", size_x*0.5,250);
+    text("NORMAL",size_x*0.5,350);
+    text("HARD",size_x*0.5,450);
+    text(">α-INDUCTION<",size_x*0.5,550);
+  }else if(difficulty == 4) {
+    text("EASY", size_x*0.5,250);
+    text("NORMAL",size_x*0.5,350);
+    text("HARD",size_x*0.5,450);
+    text("α-INDUCTION",size_x*0.5,550);
+    text(">EXTREME<",size_x*0.5,650);
   }
 
   if(key == ' ') {
@@ -136,8 +144,11 @@ void loopGame() {
   float alpha=alphaCalc();
   bat.batPreSet(btg,alpha);
   if(ball_n>=ball_max){
+    if(alpha<=0.15&&bat.homerun_n<=3){
+      difficulty=3;
+    }
     configuration.setScreen(Configuration.RESULT);
-  }else if(time>=180){
+  }else if(time>=120){
     time=0;
     ball_n+=1;
     ball.ballReset();
@@ -146,7 +157,7 @@ void loopGame() {
   if(time==0){
     ball.ballPreSet(speed[difficulty]);
   }
-  if(time<=60){
+  if(time<=30){
   bgSet();
     if(time<0){
       fill(TX_COLOR);
@@ -156,11 +167,11 @@ void loopGame() {
       pitSet(0);
       bat.batSet();
     }else if(time>=0){
-      pitSet(time/6);
+      pitSet(time/3);
       bat.batSet();
     }
   }
-  if(time>=61&&!ball.hit){
+  if(time>=31&&!ball.hit){
     bgSet();
     pitSet(10);
     ball.ballThrow();
@@ -185,7 +196,7 @@ void loopGame() {
     bgSet();
     pitSet(10);
     ball.ballFly();
-    if(ball.s<=5){
+    if(time>=90){
       fill(TX_COLOR);
       textAlign(CENTER);
       textSize(100);
@@ -206,9 +217,15 @@ void loopGame() {
 void loadResult() {
   fill(TX_COLOR);
   textSize(100);
-  text("finish",size_x*0.5,size_y*0.4);
-  text(bat.homerun_n + " HOMERUN",size_x*0.5,size_y*0.6);
-  text("POINTS: " + bat.getPoint,size_x*0.5,size_y*0.8);
+  text("finish",size_x*0.5,size_y*0.2);
+  text(bat.homerun_n + " HOMERUN",size_x*0.5,size_y*0.4);
+  text("POINTS: " + bat.getPoint,size_x*0.5,size_y*0.6);
+  float alpha=alphaCalc();
+  if(difficulty==3){
+    textSize(50);
+    fill(255,0,0);
+    text("You should play α-INDUCTION",size_x*0.5,500);
+  }
   if(key == ENTER) {
     reset();
     configuration.setScreen(Configuration.MENU);
@@ -410,7 +427,7 @@ class Ball{
 
   void hitted(int time, Batter bat,float alpha){
     int t=bat.t;
-    if(frame+64<=time+t&&time+t<=frame+65&&2<=t&&t<=6&&
+    if(frame+34<=time+t&&time+t<=frame+35&&2<=t&&t<=6&&
        x-10<=bat.x+bat.LENGTH*0.6&&bat.x+bat.LENGTH*0.6<=x+10){
       hit=true;
       s=20;
