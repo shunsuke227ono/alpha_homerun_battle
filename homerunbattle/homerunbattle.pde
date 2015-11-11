@@ -5,13 +5,12 @@ final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 30;
 float[][] buffer = new float[N_CHANNELS][BUFFER_SIZE];
 int pointer = 0;
-final int PORT = 5001;
+final int PORT = 5000;
 OscP5 oscP5 = new OscP5(this, PORT);
 
 final color BG_COLOR = color(0,0,0);
 final color TX_COLOR = color(255,255,0);
 final color BALL_COLOR = color(255,255,255);
-final color BAT_COLOR = color(204,102,0);
 
 final int size_x=960;
 final int size_y=700;
@@ -21,10 +20,6 @@ final int ball_max=10;
 final int[] speed={100,150,0,130,-1};
 int ball_n;
 int runner;
-//int strike;
-//int out;
-//int run;
-//int inning;
 int hr_n;
 int hit_n;
 int point;
@@ -32,6 +27,7 @@ Ball ball = new Ball(ball_sy,pit_Dis);
 PImage btg;
 PImage[] pitcher;
 PImage ground;
+PImage groundpit;
 Batter bat = new Batter(ball_sy,pit_Dis);
 int time;
 int difficulty; // 0:easy, 1:normal, 2:hard, 3:extreme, 4:α波誘導モード
@@ -45,17 +41,16 @@ void setup(){
   smooth();
   fill(255,255,255);
   textSize(50);
-  btg = loadImage("bat.jpg");
+  btg = loadImage("bat.png");
   configuration = new Configuration();
-  pitcher = new PImage[11];
+  pitcher = new PImage[10];
   reset();
   for(int i=1;i<=pitcher.length;i++){
-    pitcher[i-1]=loadImage("sawa"+i+".jpg");
+    pitcher[i-1]=loadImage("pitcher"+i+".png");
   }
 }
 
 void reset() {
-  background(BG_COLOR);
   ball_n=0;
   runner=0;
   hr_n=0;
@@ -65,10 +60,11 @@ void reset() {
   bat.hit_n=0;
   bat.getPoint=0;
   bat.x=(size_x-bat.LENGTH*1.2)/2;
-  time=-180;
+  time=-60;
   ball.ballReset();
   bat.batReset();
   ground = loadImage("jingu.jpg");
+  groundpit = loadImage("jingupit.jpg");
   bgSet();
 }
 
@@ -151,6 +147,7 @@ void loopMenu() {
     text(">EXTREME<",size_x*0.5,650);
   }
   if(key == ' ') {
+    frameRate(20);
     configuration.setScreen(Configuration.GAME);
   }
 }
@@ -164,7 +161,9 @@ void loopGame() {
       difficulty=-1;
     }
     configuration.setScreen(Configuration.RESULT);
-  }else if(time>=120){
+  }else{
+  if(time>=100){
+    frameRate(20);
     time=0;
     ball_n+=1;
     if(ball.single){
@@ -191,23 +190,29 @@ void loopGame() {
     hit_n=bat.hit_n;
     point=bat.getPoint;
   }
-  if(time<=30){
+  if(time<=10){
   bgSet();
     if(time<0){
       fill(TX_COLOR);
       textAlign(CENTER,BOTTOM);
       textSize(100);
-      text(int(time*(-1)/60+1),size_x*0.495,size_y*0.55);
+      text(int(time*(-1)/20+1),size_x*0.495,size_y*0.55);
       pitSet(0);
       bat.batSet();
     }else if(time>=0){
-      pitSet(time/3);
+      if(time==0){
+        pitSet(0);
+      }else{
+        pitSet(time-1);
+      }
       bat.batSet();
     }
   }
-  if(time>=31&&!ball.hit){
-    bgSet();
-    pitSet(10);
+  if(time==11){
+    frameRate(60);
+  }
+  if(time>=11&&!ball.hit){
+    bgpitSet();
     ball.ballThrow();
     if(bat.swing){
       ball.hitted(time,bat,alpha);
@@ -227,10 +232,9 @@ void loopGame() {
     }
   }
   if(ball.hit){
-    bgSet();
-    pitSet(10);
+    bgpitSet();
     ball.ballFly();
-    if(time>=90){
+    if(time>=70){
       fill(TX_COLOR);
       textAlign(CENTER);
       textSize(100);
@@ -287,6 +291,10 @@ void loopGame() {
     text(point+" POINT",0,72);
     resetMatrix();
   }
+//kakunin
+  textSize(100);
+  text(alpha,800,100);
+  }//->Result
 }
 
 void loadResult() {
@@ -296,7 +304,6 @@ void loadResult() {
   text("finish",size_x*0.5,size_y*0.2);
   text(bat.homerun_n + " HOMERUN",size_x*0.5,size_y*0.4);
   text("POINTS: " + bat.getPoint,size_x*0.5,size_y*0.6);
-  float alpha=alphaCalc();
   if(difficulty==-1){
     difficulty=3;
     textSize(50);
@@ -331,11 +338,15 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],size_x*0.5-8,ball_sy-10,64,88);
+  image(pitcher[i],size_x*0.02-10,ball_sy-280,1000,750);
 }
 
 void bgSet(){
   image(ground,0,0,size_x,size_y);
+}
+
+void bgpitSet(){
+  image(groundpit,0,0,size_x,size_y);
 }
 
 class Batter{
@@ -372,17 +383,15 @@ class Batter{
   }
 
   void batSet(){
-    fill(BAT_COLOR);
     translate(x,y);
     rotate(7*PI/6);
     float wid;
     if(alpha==0){
       wid=w*0.1;
-    }else{
-      if(alpha<0.03){
-        alpha=0.03;
-      }
+    }else if(alpha>=0.05){
       wid=w*alpha;
+    }else{
+      wid=w*0.05;
     }
     image(btg,0,0,l,wid);
     resetMatrix();
@@ -392,7 +401,6 @@ class Batter{
     if(t<=8){
       t++;
     }
-    fill(BAT_COLOR);
     translate(x,y);
     if(t==1){
       rotate(7*PI/6);
@@ -413,11 +421,10 @@ class Batter{
     float wid;
     if(alpha==0){
       wid=w*0.1;
-    }else{
-      if(alpha<0.03){
-        alpha=0.03;
-      }
+    }else if(alpha>=0.05){
       wid=w*alpha;
+    }else{
+      wid=w*0.05;
     }
     image(btg,0,0,l,wid);
     resetMatrix();
@@ -508,18 +515,17 @@ class Ball{
 
   void hitted(int time, Batter bat,float alpha){
     int t=bat.t;
-    if(frame+34<=time+t&&time+t<=frame+35&&2<=t&&t<=6&&
+    if(frame+14<=time+t&&time+t<=frame+15&&2<=t&&t<=6&&
        x-10<=bat.x+bat.LENGTH*0.6&&bat.x+bat.LENGTH*0.6<=x+10){
       hit=true;
       s=20;
       float alp;
       if(alpha==0){
         alp=0.1;
-      }else{
-        if(alpha<0.03){
-          alpha=0.03;
-        }
+      }else if(alpha>=0.05){
         alp=alpha;
+      }else{
+        alp=0.05;
       }
       dis = int((70+alp*400)*random(0.8,1.2));
       if(3<=t&&t<=5){
