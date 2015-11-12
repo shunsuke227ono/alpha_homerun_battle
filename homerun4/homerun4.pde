@@ -21,7 +21,7 @@ final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 30;
 float[][] buffer = new float[N_CHANNELS][BUFFER_SIZE];
 int pointer = 0;
-final int PORT = 5000;
+final int PORT = 5001;
 OscP5 oscP5 = new OscP5(this, PORT);
 
 final color BG_COLOR = color(0,0,0);
@@ -61,16 +61,16 @@ void setup(){
   smooth();
   fill(255,255,255);
   textSize(50);
-  btg = loadImage("bat.png");
+  btg = loadImage("bat.jpg");
   configuration = new Configuration();
   pitcher = new PImage[11];
   reset();
   for(int i=1;i<=pitcher.length;i++){
+    // pitcher[i-1]=loadImage("sawa"+i+".jpg");
     pitcher[i-1]=loadImage("maeken"+i+"-2.png");
     minim = new Minim(this);
-    player1 = minim.loadFile("top-music.mp3");
+    player1 = minim.loadFile("top-music2.mp3");
     player2 = minim.loadFile("play-music.mp3");
-    
   }
 }
 
@@ -178,7 +178,7 @@ void loopMenu() {
 }
 void stop(){
   player1.close();
-  
+
 }
 void loopGame() {
   time++;
@@ -357,7 +357,8 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],300,300,500,450);
+  image(pitcher[i],size_x*0.5-8,ball_sy-10,64,88);
+  // image(pitcher[i],300,300,500,450);
 }
 
 void bgSet(){
@@ -639,4 +640,3 @@ class Configuration {
     this.screen = screen;
   }
 }
-
