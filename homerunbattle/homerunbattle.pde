@@ -1,5 +1,20 @@
+import ddf.minim.spi.*;
+import ddf.minim.signals.*;
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.ugens.*;
+import ddf.minim.effects.*;
+
 import oscP5.*;
 import netP5.*;
+
+Minim minim;
+AudioPlayer player1;
+AudioPlayer player2;
+AudioSample homerun;
+AudioSample hit;
+AudioSample cheer;
+AudioSample strike;
 
 final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 30;
@@ -47,6 +62,9 @@ void setup(){
   reset();
   for(int i=1;i<=pitcher.length;i++){
     pitcher[i-1]=loadImage("pitcher"+i+".png");
+    minim = new Minim(this);
+    player1 = minim.loadFile("top-music2.mp3");
+    player2 = minim.loadFile("play-music.mp3");
   }
 }
 
@@ -119,6 +137,7 @@ void loopMenu() {
   text("Choose difficulty", size_x*0.5, 200);
   text("and press space key to start!", size_x*0.5, 230);
   textSize(40);
+  player1.play();
   if(difficulty == 0) {
     text(">EASY<",size_x*0.5,350);
     text("NORMAL",size_x*0.5,420);
@@ -149,13 +168,18 @@ void loopMenu() {
   if(key == ' ') {
     frameRate(20);
     configuration.setScreen(Configuration.GAME);
+    stop();
   }
 }
+void stop(){
+  player1.close();
 
+}
 void loopGame() {
   time++;
   float alpha=alphaCalc();
   bat.batPreSet(btg,alpha);
+  player2.play();
   if(ball_n>=ball_max){
     if(alpha<=0.15&&alpha!=0&&bat.homerun_n<=3){
       difficulty=-1;
