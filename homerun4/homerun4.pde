@@ -1,5 +1,25 @@
+import ddf.minim.spi.*;
+import ddf.minim.signals.*;
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.ugens.*;
+import ddf.minim.effects.*;
+
 import oscP5.*;
 import netP5.*;
+
+Minim minim;
+AudioPlayer player1;
+AudioPlayer player2;
+AudioSample hitsound;
+AudioSample foulsound;
+AudioSample cheer;
+AudioSample strike;
+AudioSample click;
+int cheerlevel;
+int atari;
+
+
 
 final int N_CHANNELS = 4;
 final int BUFFER_SIZE = 30;
@@ -12,7 +32,6 @@ final color BG_COLOR = color(0,0,0);
 final color TX_COLOR = color(255,255,0);
 final color BALL_COLOR = color(255,255,255);
 final color BAT_COLOR = color(204,102,0);
-
 final int size_x=960;
 final int size_y=700;
 final float ball_sy=425;
@@ -50,12 +69,21 @@ void setup(){
   pitcher = new PImage[11];
   reset();
   for(int i=1;i<=pitcher.length;i++){
-    pitcher[i-1]=loadImage("pitcher"+i+".png");
+    pitcher[i-1]=loadImage("maeken"+i+"-2.png");
+    minim = new Minim(this);
+    player1 = minim.loadFile("top-music2.mp3");
+    player2 = minim.loadFile("play-music.mp3");
+    click = minim.loadSample("sound11.mp3",2048);
+    cheer = minim.loadSample("baseball_cheer3.mp3");
+    hitsound = minim.loadSample("hit.mp3");
+    foulsound = minim.loadSample("foul.mp3");
   }
 }
 
 void reset() {
   background(BG_COLOR);
+  cheerlevel=0;
+  atari=0;
   ball_n=0;
   runner=0;
   hr_n=0;
@@ -94,13 +122,16 @@ void keyPressed() {
           difficulty=-1;
         }
         difficulty = (difficulty+1) % 4;
+        click.trigger();
       }
       if (keyCode == UP) {
         // FIXME: とりま二段階なのでぷらす
         difficulty = (difficulty+3) % 4;
+        click.trigger();
       }
       if(key=='z'){
         difficulty=4;
+        click.trigger();
       }
       break;
     case Configuration.GAME:
@@ -123,6 +154,7 @@ void loopMenu() {
   text("Choose difficulty", size_x*0.5, 200);
   text("and press space key to start!", size_x*0.5, 230);
   textSize(40);
+  player1.play();
   if(difficulty == 0) {
     text(">EASY<",size_x*0.5,350);
     text("NORMAL",size_x*0.5,420);
@@ -152,13 +184,21 @@ void loopMenu() {
   }
   if(key == ' ') {
     configuration.setScreen(Configuration.GAME);
+    stop1();
   }
 }
-
+void stop1(){
+  player1.close();
+  
+}
+void stop2(){
+ //player2.close(); 
+}
 void loopGame() {
   time++;
   float alpha=alphaCalc();
   bat.batPreSet(btg,alpha);
+  player2.play();
   if(ball_n>=ball_max){
     if(alpha<=0.15&&alpha!=0&&bat.homerun_n<=3){
       difficulty=-1;
@@ -235,6 +275,7 @@ void loopGame() {
       textAlign(CENTER);
       textSize(100);
       if(ball.homerun){
+        cheer.trigger();
         if(runner<3){
           text("HOMERUN!!!",size_x*0.5,size_y*0.4);
           textSize(50);
@@ -249,6 +290,7 @@ void loopGame() {
         text("distance:"+ball.dis+"m",size_x*0.5,size_y*0.6);
       }else if(ball.single){
         if(runner==3){
+          cheer.trigger();
           text("TIMELY-HIT!!",size_x*0.5,size_y*0.4);
           textSize(50);
           text("+10point",size_x*0.5,size_y*0.50);
@@ -306,6 +348,7 @@ void loadResult() {
   if(key == ENTER) {
     reset();
     configuration.setScreen(Configuration.MENU);
+    stop2();
   }
 }
 
@@ -331,7 +374,7 @@ float alphaCalc(){
 }
 
 void pitSet(int i){
-  image(pitcher[i],size_x*0.02-10,ball_sy-280,1000,750);
+  image(pitcher[i],300,300,500,450);
 }
 
 void bgSet(){
@@ -440,6 +483,8 @@ class Ball{
   boolean hit;
   boolean homerun;
   boolean single;
+  boolean hit_trigger;
+  boolean foul_trigger;
   float ball_sy;
   float pit_Dis;
   int kmph;
@@ -491,6 +536,8 @@ class Ball{
     hit=false;
     homerun=false;
     single=false;
+    hit_trigger=false;
+    foul_trigger=false;
   }
 
   void ballThrow(){
@@ -524,6 +571,7 @@ class Ball{
       dis = int((70+alp*400)*random(0.8,1.2));
       if(3<=t&&t<=5){
         if(t==4){
+          hit_trigger=true;
           dir=0;
           x2=0;
           if(dis>=120){
@@ -552,11 +600,13 @@ class Ball{
         }
       }
       if(t==6){
+        foul_trigger=true;
         dir=-2;
         v=28;
         v2=1;
         x2=-18;
       }else if(t==5){
+        hit_trigger=true;
         dir=-1;
         x2=-8;
         if(homerun){
@@ -567,6 +617,7 @@ class Ball{
           v2=0.7;
         }
       }else if(t==3){
+        hit_trigger=true;
         dir=1;
         x2=8;
         if(homerun){
@@ -577,12 +628,18 @@ class Ball{
           v2=0.7;
         }
       }else if(t==2){
+        foul_trigger=true;
         dir=2;
         v=33;
         v2=1;
         x2=18;
       }
     }
+    trigger();
+  }
+  void trigger(){
+  if (hit_trigger==true) hitsound.trigger();
+  if (foul_trigger==true) foulsound.trigger();
   }
 
   void ballFly() {
@@ -613,3 +670,4 @@ class Configuration {
     this.screen = screen;
   }
 }
+
